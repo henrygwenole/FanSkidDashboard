@@ -1,40 +1,72 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 # Load data
 @st.cache_data
 def load_data():
-    excel_file = "Data/Twave - results.xlsx"
-    csv_file = "most_recent_readings.csv"
-    df_excel = pd.read_excel(excel_file, sheet_name="Sheet1")
-    df_csv = pd.read_csv(csv_file)
-    return df_excel, df_csv
+    df_readings = pd.read_csv("most_recent_readings.csv")
+    df_twave = pd.read_csv("Twave - results.csv")
+    return df_readings, df_twave
 
-# Load the data
-df_excel, df_csv = load_data()
+df_readings, df_twave = load_data()
 
-# Sidebar
-st.sidebar.title("Fan Skid Predictive Maintenance")
-st.sidebar.markdown("### Focus on Belt Imbalance and Misalignment")
+# --- Define Misalignment Thresholds ---
+MISALIGNMENT_THRESHOLD = 0.5  # Alert if > 0.5
+LOOSENESS_THRESHOLD = 4.0  # Alert if > 4.0
 
-# Current Health Status
-st.title("Current Machine Health Status")
-st.metric(label="Driven Unbalance/Misalignment", value=f"{df_csv['Driven Unbalance/Misalignment'].iloc[-1]:.2f}")
-st.metric(label="Motor Unbalance/Misalignment", value=f"{df_csv['Motor Unbalance/Misalignment'].iloc[-1]:.2f}")
+# --- Sidebar Filters ---
+st.sidebar.header("🔍 Filter Options")
+time_filter = st.sidebar.slider("Select Time Range (minutes)", 
+                                min_value=0, max_value=len(df_readings)-1, 
+                                value=(0, len(df_readings)-1))
 
-# Projected Costs
-st.title("Projected Cost Impact")
-current_waste = df_csv['WasteCost'].iloc[-1]
-st.write(f"**Current Daily Loss:** £{current_waste:.2f}")
-st.write(f"**2 Days Loss:** £{current_waste * 2:.2f}")
-st.write(f"**7 Days Loss:** £{current_waste * 7:.2f}")
+# Apply filter
+df_filtered = df_readings.iloc[time_filter[0]:time_filter[1]]
 
-# Insights
-st.title("Insights and Recommendations")
-if df_csv['Driven Unbalance/Misalignment'].iloc[-1] > 0.5:
-    st.warning("⚠️ High driven unbalance/misalignment detected. Immediate maintenance recommended!")
-if df_csv['Motor Unbalance/Misalignment'].iloc[-1] > 0.5:
-    st.warning("⚠️ High motor unbalance/misalignment detected. Immediate maintenance recommended!")
+# --- Dashboard Layout ---
+st.title("⚙️ Fanskid Predictive Maintenance Dashboard")
+st.subheader("🔹 Monitoring Belt Misalignment & Machine Condition")
 
-# Link to Maintenance Procedure
-st.markdown("### [🔧 Maintenance Procedure](https://example.com/maintenance-guide)")
+# --- Line Chart: Misalignment & Looseness ---
+fig_misalignment = px.line(df_filtered, x='timestamp', 
+                           y=['Driven Unbalance/Misalignment', 'Motor Unbalance/Misalignment'],
+                           labels={'value': "Misalignment Level", 'timestamp': "Time"},
+                           title="📈 Misalignment Over Time")
+fig_misalignment.add_hline(y=MISALIGNMENT_THRESHOLD, line_dash="dot", line_color="red")
+
+fig_looseness = px.line(df_filtered, x='timestamp', 
+                        y=['Transmission Looseness (Motor)', 'Transmission Looseness (Driven)'],
+                        labels={'value': "Looseness Level", 'timestamp': "Time"},
+                        title="📉 Transmission Looseness Over Time")
+fig_looseness.add_hline(y=LOOSENESS_THRESHOLD, line_dash="dot", line_color="red")
+
+# Display Charts
+st.plotly_chart(fig_misalignment)
+st.plotly_chart(fig_looseness)
+
+# --- Diagnostic Flags Section ---
+st.subheader("🚨 Diagnostic Flags & Anomalies")
+anomalies = df_filtered[(df_filtered['Driven Unbalance/Misalignment'] > MISALIGNMENT_THRESHOLD) |
+                        (df_filtered['Transmission Looseness (Motor)'] > LOOSENESS_THRESHOLD)]
+
+if not anomalies.empty:
+    st.error("⚠️ Belt Misalignment Detected! Check flagged timestamps below.")
+    st.dataframe(anomalies)
+else:
+    st.success("✅ No major misalignment issues detected.")
+
+# --- Maintenance Procedures ---
+st.subheader("🔧 Maintenance Procedures")
+st.markdown("Click the link below to access maintenance procedures:")
+st.markdown("[Open Maintenance Guide](https://your-app-link.com)")
+
+# --- Additional Vibration Analysis (Twave) ---
+st.subheader("📊 Vibration Data Analysis")
+fig_vibration = px.line(df_twave, x='timestamp', 
+                        y=['ISO Vel RMS Motor', 'ISO Vel RMS Fan'],
+                        labels={'value': "Vibration (mm/s RMS)", 'timestamp': "Time"},
+                        title="🔍 Vibration Levels Over Time")
+st.plotly_chart(fig_vibration)
+
+st.info("ℹ️ High vibration levels at specific speeds can indicate belt misalignment.")
