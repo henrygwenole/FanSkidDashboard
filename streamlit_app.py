@@ -3,22 +3,33 @@ import pandas as pd
 import plotly.express as px
 import os
 
-# --- Define the correct data path ---
-DATA_PATH = "FanSkidDashboard/Data/"  # Update this to your actual path
+# --- Define the Relative Path ---
+DATA_PATH = os.path.join(os.path.dirname(__file__), "Data")  # Points to the 'Data' folder
+
+# --- File Paths ---
+file_readings = os.path.join(DATA_PATH, "most_recent_readings.csv")
+file_twave = os.path.join(DATA_PATH, "Twave - results.csv")
+
+# --- Verify Files Exist Before Loading ---
+if not os.path.exists(file_readings):
+    st.error(f"❌ File not found: {file_readings}")
+if not os.path.exists(file_twave):
+    st.error(f"❌ File not found: {file_twave}")
 
 # --- Load Data ---
 @st.cache_data
 def load_data():
     try:
-        df_readings = pd.read_csv(os.path.join(DATA_PATH, "most_recent_readings.csv"))
-        df_twave = pd.read_csv(os.path.join(DATA_PATH, "Twave - results.csv"))
+        df_readings = pd.read_csv(file_readings)
+        df_twave = pd.read_csv(file_twave)
         return df_readings, df_twave
-    except FileNotFoundError:
-        st.error("❌ Data files not found! Check the file paths.")
+    except Exception as e:
+        st.error(f"❌ Error loading data: {e}")
         return None, None
 
 df_readings, df_twave = load_data()
 
+# --- Proceed only if data is loaded ---
 if df_readings is not None and df_twave is not None:
 
     # --- Define Misalignment & Looseness Thresholds ---
