@@ -1,12 +1,7 @@
-import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output
+import streamlit as st
 import plotly.graph_objects as go
 
-# Initialize the Dash app
-app = dash.Dash(__name__, suppress_callback_exceptions=True)
-
-# Define a function to create the hexagonal radar chart
+# Function to create the hexagonal radar chart
 def create_health_chart():
     categories = ['Vibration', 'Temperature', 'Power Usage', 'Wear & Tear', 'Efficiency', 'Load']
     values = [70, 85, 60, 40, 75, 90]  # Sample values representing health metrics
@@ -18,7 +13,7 @@ def create_health_chart():
         fill='toself',
         name='Machine Health'
     ))
-    
+
     fig.update_layout(
         polar=dict(
             radialaxis=dict(visible=True, range=[0, 100])
@@ -27,62 +22,35 @@ def create_health_chart():
     )
     return fig
 
-# Define the app layout
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div(id='page-content')
-])
+# Streamlit UI
+st.set_page_config(page_title="Machine Monitoring Dashboard")
 
-# Define Home Page layout
-def home_page():
-    return html.Div([
-        html.H1("Machine Monitoring Dashboard"),
-        html.P("Overview of machine health and power waste."),
-        dcc.Graph(id='hex-health-chart', figure=create_health_chart()),
-        dcc.Link('View Issues', href='/issues'), html.Br(),
-        dcc.Link('Planned Maintenance', href='/maintenance')
-    ])
+st.title("Machine Monitoring Dashboard")
+st.write("Overview of machine health and power waste.")
 
-# Define Issues Page layout
-def issues_page():
-    return html.Div([
-        html.H1("Issues and Flags"),
-        html.P("List of flagged issues."),
-        dcc.Link('View Fault Details', href='/fault-info'), html.Br(),
-        dcc.Link('Back to Home', href='/')
-    ])
+# Display hexagonal health chart
+st.plotly_chart(create_health_chart())
 
-# Define Fault Information Page layout
-def fault_info_page():
-    return html.Div([
-        html.H1("Fault Information"),
-        dcc.Graph(id='fault-chart', figure={}),  # Placeholder for chart
-        html.Button("Plan Maintenance", id='plan-maintenance-btn'),
-        dcc.Link('Back to Issues', href='/issues')
-    ])
+# Navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Home", "Issues", "Fault Information", "Planned Maintenance"])
 
-# Define Planned Maintenance Page layout
-def maintenance_page():
-    return html.Div([
-        html.H1("Planned Maintenance"),
-        html.P("Scheduled maintenance actions."),
-        dcc.Link('Frontline IO App', href='#', id='frontline-link'),  # Placeholder link
-        html.Br(),
-        dcc.Link('Back to Home', href='/')
-    ])
+if page == "Issues":
+    st.header("Issues and Flags")
+    st.write("List of flagged issues.")
+    if st.button("View Fault Details"):
+        st.session_state.page = "Fault Information"
 
-# Callback to update the page content
-@app.callback(Output('page-content', 'children'), Input('url', 'pathname'))
-def display_page(pathname):
-    if pathname == '/issues':
-        return issues_page()
-    elif pathname == '/fault-info':
-        return fault_info_page()
-    elif pathname == '/maintenance':
-        return maintenance_page()
-    else:
-        return home_page()
+elif page == "Fault Information":
+    st.header("Fault Information")
+    st.write("Detailed chart about faults.")
+    st.button("Plan Maintenance")
 
-# Run the app
-if __name__ == '__main__':
-    app.run_server(debug=True)
+elif page == "Planned Maintenance":
+    st.header("Planned Maintenance")
+    st.write("Scheduled maintenance actions.")
+    st.write("[Frontline IO App](#)")  # Placeholder for link
+
+else:
+    st.header("Welcome to the Machine Monitoring Dashboard")
+
