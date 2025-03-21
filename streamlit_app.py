@@ -58,6 +58,10 @@ planned_maintenance = pd.DataFrame([
     {"Date": "March", "Task": "Motor full inspection and electrical testing"}
 ])
 
+# Shared status variables
+machine_status = get_machine_status()
+alignment_severity = get_alignment_severity()
+
 # Streamlit UI
 st.set_page_config(page_title="Machine Monitoring Dashboard")
 
@@ -68,15 +72,10 @@ if page == "Home":
     st.title("Machine Monitoring Dashboard")
     st.write("Overview of machine health and power waste.")
     
-    # Display machine ID and live status
-    machine_status = get_machine_status()
-    alignment_severity = get_alignment_severity()
-    
     st.write(f"**Machine ID:** {MACHINE_ID}")
     st.write(f"**Status:** {'🟢 Online' if machine_status == 'Online' else '🔴 Offline'}")
     st.write(f"**Belt Drive Alignment Severity:** {alignment_severity}")
     
-    # Display hexagonal health chart
     st.plotly_chart(create_health_chart())
 
 elif page == "Faults":
@@ -97,11 +96,9 @@ elif page == "Maintenance":
     st.header("Maintenance")
     st.write(f"Scheduled maintenance actions for {MONITORED_MACHINE}.")
     
-    # Display maintenance history as a table
     st.subheader("Maintenance History")
     st.table(maintenance_history)
     
-    # Display planned maintenance activities as a table
     st.subheader("Upcoming Maintenance")
     st.table(planned_maintenance)
     
