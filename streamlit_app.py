@@ -11,6 +11,10 @@ MACHINE_ID = "FSK-001"  # Example ID
 def get_machine_status():
     return "Online" if random.choice([True, True, False]) else "Offline"
 
+# Function to simulate belt drive misalignment severity
+def get_alignment_severity():
+    return random.choice(["Low", "Moderate", "High"])
+
 # Function to create the hexagonal radar chart
 def create_health_chart():
     categories = ['Vibration', 'Temperature', 'Power Usage', 'Wear & Tear', 'Efficiency', 'Load']
@@ -35,12 +39,12 @@ def create_health_chart():
 # Function to create a sample fault trend chart
 def create_fault_trend_chart():
     time_series = ["May 10", "May 15", "May 20", "May 25", "June 1"]
-    fault_values = [10, 15, 20, 30, 45]  # Placeholder fault progression
+    fault_values = [10, 15, 30, 45, 60]  # Simulated fault progression
     
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=time_series, y=fault_values, mode='lines+markers', name='Fault Trend'))
     
-    fig.update_layout(title="Fault Progression Over Time", xaxis_title="Date", yaxis_title="Severity Index")
+    fig.update_layout(title="Belt Drive Alignment Fault Over Time", xaxis_title="Date", yaxis_title="Misalignment Severity Index")
     return fig
 
 # Maintenance history and planned activities data (placeholder)
@@ -66,8 +70,11 @@ if page == "Home":
     
     # Display machine ID and live status
     machine_status = get_machine_status()
+    alignment_severity = get_alignment_severity()
+    
     st.write(f"**Machine ID:** {MACHINE_ID}")
     st.write(f"**Status:** {'🟢 Online' if machine_status == 'Online' else '🔴 Offline'}")
+    st.write(f"**Belt Drive Alignment Severity:** {alignment_severity}")
     
     # Display hexagonal health chart
     st.plotly_chart(create_health_chart())
@@ -77,11 +84,12 @@ elif page == "Faults":
     if fault_page == "Issues":
         st.header("Issues and Flags")
         st.write(f"List of flagged issues for {MONITORED_MACHINE}.")
+        st.write(f"**Belt Alignment Issue Severity:** {alignment_severity}")
         if st.button("View Fault Details"):
             st.session_state.page = "Fault Details"
     elif fault_page == "Fault Details":
-        st.header("Fault Information")
-        st.write(f"Detailed chart about faults for {MONITORED_MACHINE}.")
+        st.header("Belt Drive Fault Information")
+        st.write(f"Detailed chart about belt drive misalignment for {MONITORED_MACHINE}.")
         st.plotly_chart(create_fault_trend_chart())
         st.button("Plan Maintenance")
 
