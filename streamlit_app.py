@@ -1,10 +1,15 @@
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
+
+# Placeholder function to get source names from a dataset
+def get_source_names():
+    return ["Machine A", "Machine B", "Machine C", "Machine D"]  # Placeholder values
 
 # Function to create the hexagonal radar chart
 def create_health_chart():
     categories = ['Vibration', 'Temperature', 'Power Usage', 'Wear & Tear', 'Efficiency', 'Load']
-    values = [70, 85, 60, 40, 75, 90]  # Sample values representing health metrics
+    values = [70, 85, 60, 40, 75, 90]  # Placeholder values representing health metrics
     
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
@@ -28,6 +33,10 @@ st.set_page_config(page_title="Machine Monitoring Dashboard")
 st.title("Machine Monitoring Dashboard")
 st.write("Overview of machine health and power waste.")
 
+# Dropdown to select source (machine)
+source_names = get_source_names()
+selected_source = st.selectbox("Select Machine:", source_names)
+
 # Display hexagonal health chart
 st.plotly_chart(create_health_chart())
 
@@ -37,20 +46,19 @@ page = st.sidebar.radio("Go to", ["Home", "Issues", "Fault Information", "Planne
 
 if page == "Issues":
     st.header("Issues and Flags")
-    st.write("List of flagged issues.")
+    st.write(f"List of flagged issues for {selected_source}.")
     if st.button("View Fault Details"):
         st.session_state.page = "Fault Information"
 
 elif page == "Fault Information":
     st.header("Fault Information")
-    st.write("Detailed chart about faults.")
+    st.write(f"Detailed chart about faults for {selected_source}.")
     st.button("Plan Maintenance")
 
 elif page == "Planned Maintenance":
     st.header("Planned Maintenance")
-    st.write("Scheduled maintenance actions.")
+    st.write(f"Scheduled maintenance actions for {selected_source}.")
     st.write("[Frontline IO App](#)")  # Placeholder for link
 
 else:
     st.header("Welcome to the Machine Monitoring Dashboard")
-
