@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
 import random
 
 # Define monitored machine
@@ -42,6 +43,17 @@ def create_fault_trend_chart():
     fig.update_layout(title="Fault Progression Over Time", xaxis_title="Date", yaxis_title="Severity Index")
     return fig
 
+# Maintenance history and planned activities data (placeholder)
+maintenance_history = pd.DataFrame([
+    {"Date": "October", "Task": "Belt replaced and belt alignment corrected"},
+    {"Date": "June", "Task": "Motor drive end bearing replaced"}
+])
+
+planned_maintenance = pd.DataFrame([
+    {"Date": "December", "Task": "Lubrication check and fan blade inspection"},
+    {"Date": "March", "Task": "Motor full inspection and electrical testing"}
+])
+
 # Streamlit UI
 st.set_page_config(page_title="Machine Monitoring Dashboard")
 
@@ -76,4 +88,13 @@ elif page == "Faults":
 elif page == "Planned Maintenance":
     st.header("Planned Maintenance")
     st.write(f"Scheduled maintenance actions for {MONITORED_MACHINE}.")
+    
+    # Display maintenance history as a table
+    st.subheader("Maintenance History")
+    st.table(maintenance_history)
+    
+    # Display planned maintenance activities as a table
+    st.subheader("Upcoming Maintenance")
+    st.table(planned_maintenance)
+    
     st.write("[Frontline IO App](#)")  # Placeholder for link
