@@ -1,126 +1,88 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import os
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.graph_objects as go
 
-# --- Define the Relative Path ---
-DATA_PATH = os.path.join(os.path.dirname(__file__), "Data")  # Uses relative path
+# Initialize the Dash app
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-# --- File Paths ---
-file_readings = os.path.join(DATA_PATH, "most_recent_readings.csv")
-file_twave = os.path.join(DATA_PATH, "Twave - results.csv")
+# Define a function to create the hexagonal radar chart
+def create_health_chart():
+    categories = ['Vibration', 'Temperature', 'Power Usage', 'Wear & Tear', 'Efficiency', 'Load']
+    values = [70, 85, 60, 40, 75, 90]  # Sample values representing health metrics
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatterpolar(
+        r=values + [values[0]],  # Closing the loop
+        theta=categories + [categories[0]],
+        fill='toself',
+        name='Machine Health'
+    ))
+    
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 100])
+        ),
+        showlegend=True
+    )
+    return fig
 
-# --- Check if files exist ---
-if not os.path.exists(file_readings):
-    st.error(f"❌ File not found: {file_readings}")
-if not os.path.exists(file_twave):
-    st.error(f"❌ File not found: {file_twave}")
+# Define the app layout
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content')
+])
 
-# --- Load Data ---
-@st.cache_data
-def load_data():
-    try:
-        df_readings = pd.read_csv(file_readings)
-        df_twave = pd.read_csv(file_twave)
+# Define Home Page layout
+def home_page():
+    return html.Div([
+        html.H1("Machine Monitoring Dashboard"),
+        html.P("Overview of machine health and power waste."),
+        dcc.Graph(id='hex-health-chart', figure=create_health_chart()),
+        dcc.Link('View Issues', href='/issues'), html.Br(),
+        dcc.Link('Planned Maintenance', href='/maintenance')
+    ])
 
-        # Debugging: Show first few rows
-        st.write("✅ Data Loaded Successfully!")
-        st.write("Data Preview (Readings):", df_readings.head())
-        st.write("Data Preview (Twave):", df_twave.head())
+# Define Issues Page layout
+def issues_page():
+    return html.Div([
+        html.H1("Issues and Flags"),
+        html.P("List of flagged issues."),
+        dcc.Link('View Fault Details', href='/fault-info'), html.Br(),
+        dcc.Link('Back to Home', href='/')
+    ])
 
-        # Clean column names (remove spaces)
-        df_readings.columns = df_readings.columns.str.strip()
-        df_twave.columns = df_twave.columns.str.strip()
+# Define Fault Information Page layout
+def fault_info_page():
+    return html.Div([
+        html.H1("Fault Information"),
+        dcc.Graph(id='fault-chart', figure={}),  # Placeholder for chart
+        html.Button("Plan Maintenance", id='plan-maintenance-btn'),
+        dcc.Link('Back to Issues', href='/issues')
+    ])
 
-        # Ensure 'timestamp' column exists
-        if 'timestamp' not in df_readings.columns:
-            st.error("❌ 'timestamp' column missing in most_recent_readings.csv!")
-        if 'timestamp' not in df_twave.columns:
-            st.error("❌ 'timestamp' column missing in Twave - results.csv!")
+# Define Planned Maintenance Page layout
+def maintenance_page():
+    return html.Div([
+        html.H1("Planned Maintenance"),
+        html.P("Scheduled maintenance actions."),
+        dcc.Link('Frontline IO App', href='#', id='frontline-link'),  # Placeholder link
+        html.Br(),
+        dcc.Link('Back to Home', href='/')
+    ])
 
-        # Convert 'timestamp' to datetime if needed
-        try:
-            df_readings['timestamp'] = pd.to_datetime(df_readings['timestamp'])
-        except:
-            st.error("⚠️ 'timestamp' column is not in datetime format!")
+# Callback to update the page content
+@app.callback(Output('page-content', 'children'), Input('url', 'pathname'))
+def display_page(pathname):
+    if pathname == '/issues':
+        return issues_page()
+    elif pathname == '/fault-info':
+        return fault_info_page()
+    elif pathname == '/maintenance':
+        return maintenance_page()
+    else:
+        return home_page()
 
-        return df_readings, df_twave
-    except Exception as e:
-        st.error(f"❌ Error loading data: {e}")
-        return None, None
-
-df_readings, df_twave = load_data()
-
-# --- Proceed only if data is loaded ---
-if df_readings is not None and df_twave is not None:
-
-    # --- Define Misalignment & Looseness Thresholds ---
-    MISALIGNMENT_THRESHOLD = 0.5  # Alert if > 0.5
-    LOOSENESS_THRESHOLD = 4.0  # Alert if > 4.0
-
-    # --- Sidebar Filters ---
-    st.sidebar.header("🔍 Filter Options")
-    time_filter = st.sidebar.slider("Select Time Range (minutes)", 
-                                    min_value=0, max_value=len(df_readings)-1, 
-                                    value=(0, len(df_readings)-1))
-
-    # Apply filter
-    df_filtered = df_readings.iloc[time_filter[0]:time_filter[1]]
-
-    # --- Debugging: Show Filtered Data ---
-    st.write("Filtered Data Preview:", df_filtered.head())
-
-    # --- Line Chart: Misalignment & Looseness ---
-    try:
-        fig_misalignment = px.line(df_filtered, x='timestamp', 
-                                   y=['Driven Unbalance/Misalignment', 'Motor Unbalance/Misalignment'],
-                                   labels={'value': "Misalignment Level", 'timestamp': "Time"},
-                                   title="📈 Misalignment Over Time")
-        fig_misalignment.add_hline(y=MISALIGNMENT_THRESHOLD, line_dash="dot", line_color="red")
-        st.plotly_chart(fig_misalignment)
-    except Exception as e:
-        st.error(f"❌ Error plotting Misalignment Chart: {e}")
-
-    try:
-        fig_looseness = px.line(df_filtered, x='timestamp', 
-                                y=['Transmission Looseness (Motor)', 'Transmission Looseness (Driven)'],
-                                labels={'value': "Looseness Level", 'timestamp': "Time"},
-                                title="📉 Transmission Looseness Over Time")
-        fig_looseness.add_hline(y=LOOSENESS_THRESHOLD, line_dash="dot", line_color="red")
-        st.plotly_chart(fig_looseness)
-    except Exception as e:
-        st.error(f"❌ Error plotting Looseness Chart: {e}")
-
-    # --- Diagnostic Flags Section ---
-    st.subheader("🚨 Diagnostic Flags & Anomalies")
-    try:
-        anomalies = df_filtered[(df_filtered['Driven Unbalance/Misalignment'] > MISALIGNMENT_THRESHOLD) |
-                                (df_filtered['Transmission Looseness (Motor)'] > LOOSENESS_THRESHOLD)]
-        if not anomalies.empty:
-            st.error("⚠️ Belt Misalignment Detected! Check flagged timestamps below.")
-            st.dataframe(anomalies)
-        else:
-            st.success("✅ No major misalignment issues detected.")
-    except Exception as e:
-        st.error(f"❌ Error detecting anomalies: {e}")
-
-    # --- Maintenance Procedures ---
-    st.subheader("🔧 Maintenance Procedures")
-    st.markdown("Click the link below to access maintenance procedures:")
-    st.markdown("[Open Maintenance Guide](https://your-app-link.com)")
-
-    # --- Additional Vibration Analysis (Twave) ---
-    st.subheader("📊 Vibration Data Analysis")
-    try:
-        fig_vibration = px.line(df_twave, x='timestamp', 
-                                y=['ISO Vel RMS Motor', 'ISO Vel RMS Fan'],
-                                labels={'value': "Vibration (mm/s RMS)", 'timestamp': "Time"},
-                                title="🔍 Vibration Levels Over Time")
-        st.plotly_chart(fig_vibration)
-    except Exception as e:
-        st.error(f"❌ Error plotting Vibration Chart: {e}")
-
-    st.info("ℹ️ High vibration levels at specific speeds can indicate belt misalignment.")
-
-else:
-    st.warning("⚠️ No data loaded. Please check file paths and restart the app.")
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True)
