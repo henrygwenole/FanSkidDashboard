@@ -66,7 +66,7 @@ alignment_severity = get_alignment_severity()
 st.set_page_config(page_title="Machine Monitoring Dashboard")
 
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Select Page", ["Home", "Faults", "Maintenance"])
+page = st.sidebar.radio("Select Page", ["Home", "Monitoring", "Maintenance"])
 
 if page == "Home":
     st.title("Machine Monitoring Dashboard")
@@ -78,7 +78,28 @@ if page == "Home":
     
     st.plotly_chart(create_health_chart())
 
-elif page == "Faults":
+elif page == "Monitoring":
+    st.header("Machine Condition Monitoring")
+    st.write("Overview of machine status and detected issues.")
+    
+    # Simulated fault statuses (Green: Good, Orange: Needs Monitoring, Red: Critical Issue)
+    fault_conditions = pd.DataFrame([
+        {"Component": "Motor Foundation", "Status": "Good"},
+        {"Component": "Motor Transmission", "Status": "Critical"},
+        {"Component": "Drive 1 Unbalance", "Status": "Good"},
+        {"Component": "Drive 1 DE Bearing", "Status": "Good"},
+        {"Component": "Drive 1 Transmission", "Status": "Needs Monitoring"},
+        {"Component": "Motor DE Bearing", "Status": "Critical"}
+    ])
+    
+    def get_status_color(status):
+        return {"Good": "#4CAF50", "Needs Monitoring": "#FFA500", "Critical": "#FF0000"}.get(status, "#CCCCCC")
+    
+    for _, row in fault_conditions.iterrows():
+        st.markdown(f'<div style="background-color:{get_status_color(row["Status"])};padding:10px;border-radius:5px;margin:5px 0;color:white;text-align:center;">{row["Component"]} - {row["Status"]}</div>', unsafe_allow_html=True)
+    
+    if st.button("View Fault Details"):
+        st.session_state.page = "Fault Details"
     fault_page = st.sidebar.radio("Select Subpage", ["Issues", "Fault Details"])
     if fault_page == "Issues":
         st.header("Issues and Flags")
