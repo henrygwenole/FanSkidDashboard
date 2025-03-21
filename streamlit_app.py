@@ -98,14 +98,14 @@ elif page == "Monitoring":
     for _, row in fault_conditions.iterrows():
         st.markdown(f'<div style="background-color:{get_status_color(row["Status"])};padding:10px;border-radius:5px;margin:5px 0;color:white;text-align:center;">{row["Component"]} - {row["Status"]}</div>', unsafe_allow_html=True)
     
-    if st.button("View Fault Details", key="view_fault_details_btn_1"): 
+    if st.button("View Fault Details", key="view_fault_details_btn"):  
         st.session_state.page = "Fault Details"
     fault_page = st.sidebar.radio("Select Subpage", ["Issues", "Fault Details"])
     if fault_page == "Issues":
         st.header("Issues and Flags")
         st.write(f"List of flagged issues for {MONITORED_MACHINE}.")
         st.write(f"**Belt Alignment Issue Severity:** {alignment_severity}")
-        if st.button("View Fault Details", key="view_fault_details_btn_1"): 
+        if st.button("View Fault Details", key="view_fault_details_btn"):  
             st.session_state.page = "Fault Details"
     elif fault_page == "Fault Details":
         st.header("Belt Drive Fault Information")
