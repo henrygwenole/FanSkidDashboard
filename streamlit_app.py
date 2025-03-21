@@ -1,6 +1,5 @@
 import streamlit as st
 import plotly.graph_objects as go
-import pandas as pd
 import random
 
 # Define monitored machine
@@ -46,39 +45,35 @@ def create_fault_trend_chart():
 # Streamlit UI
 st.set_page_config(page_title="Machine Monitoring Dashboard")
 
-st.title("Machine Monitoring Dashboard")
-st.write("Overview of machine health, power waste, and fault trends.")
-
-# Display machine ID and live status
-machine_status = get_machine_status()
-st.write(f"**Machine ID:** {MACHINE_ID}")
-st.write(f"**Status:** {'🟢 Online' if machine_status == 'Online' else '🔴 Offline'}")
-
-# Display hexagonal health chart
-st.plotly_chart(create_health_chart())
-
-# Display fault trend chart
-st.plotly_chart(create_fault_trend_chart())
-
-# Navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Home", "Issues", "Fault Information", "Planned Maintenance"])
+page = st.sidebar.radio("Select Page", ["Home", "Faults", "Planned Maintenance"])
 
-if page == "Issues":
-    st.header("Issues and Flags")
-    st.write(f"List of flagged issues for {MONITORED_MACHINE}.")
-    if st.button("View Fault Details"):
-        st.session_state.page = "Fault Information"
+if page == "Home":
+    st.title("Machine Monitoring Dashboard")
+    st.write("Overview of machine health and power waste.")
+    
+    # Display machine ID and live status
+    machine_status = get_machine_status()
+    st.write(f"**Machine ID:** {MACHINE_ID}")
+    st.write(f"**Status:** {'🟢 Online' if machine_status == 'Online' else '🔴 Offline'}")
+    
+    # Display hexagonal health chart
+    st.plotly_chart(create_health_chart())
 
-elif page == "Fault Information":
-    st.header("Fault Information")
-    st.write(f"Detailed chart about faults for {MONITORED_MACHINE}.")
-    st.button("Plan Maintenance")
+elif page == "Faults":
+    fault_page = st.sidebar.radio("Select Subpage", ["Issues", "Fault Details"])
+    if fault_page == "Issues":
+        st.header("Issues and Flags")
+        st.write(f"List of flagged issues for {MONITORED_MACHINE}.")
+        if st.button("View Fault Details"):
+            st.session_state.page = "Fault Details"
+    elif fault_page == "Fault Details":
+        st.header("Fault Information")
+        st.write(f"Detailed chart about faults for {MONITORED_MACHINE}.")
+        st.plotly_chart(create_fault_trend_chart())
+        st.button("Plan Maintenance")
 
 elif page == "Planned Maintenance":
     st.header("Planned Maintenance")
     st.write(f"Scheduled maintenance actions for {MONITORED_MACHINE}.")
     st.write("[Frontline IO App](#)")  # Placeholder for link
-
-else:
-    st.header("Welcome to the Machine Monitoring Dashboard")
