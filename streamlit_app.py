@@ -58,7 +58,7 @@ planned_maintenance = pd.DataFrame([
 st.set_page_config(page_title="Machine Monitoring Dashboard")
 
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Select Page", ["Home", "Faults", "Planned Maintenance"])
+page = st.sidebar.radio("Select Page", ["Home", "Faults", "Maintenance"])
 
 if page == "Home":
     st.title("Machine Monitoring Dashboard")
@@ -85,8 +85,8 @@ elif page == "Faults":
         st.plotly_chart(create_fault_trend_chart())
         st.button("Plan Maintenance")
 
-elif page == "Planned Maintenance":
-    st.header("Planned Maintenance")
+elif page == "Maintenance":
+    st.header("Maintenance")
     st.write(f"Scheduled maintenance actions for {MONITORED_MACHINE}.")
     
     # Display maintenance history as a table
