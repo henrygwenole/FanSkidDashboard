@@ -22,12 +22,8 @@ When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz
 🧠 **Note**: The dataset contains 10,000 samples collected over 100 seconds, giving a sampling rate of **100 Hz**. However, if you're seeing valid content up to 5,000 Hz, then the true sampling rate is **10,000 Hz**. This has now been correctly reflected in the frequency axis.
 """)
 
-uploaded_file = st.file_uploader("Upload vibration .txt file", type="txt")
-
-if uploaded_file is not None:
-    data = np.loadtxt(uploaded_file, delimiter="\t", usecols=(1, 2))
-    st.success("Custom file uploaded and loaded.")
-else:
+# Load default data directly without file uploader
+data = np.loadtxt("data/Data 70-F-0/1.txt", delimiter="	", usecols=(1, 2))
     try:
         data = np.loadtxt("data/Data 70-F-0/1.txt", delimiter="\t", usecols=(1, 2))
     except Exception as e:
