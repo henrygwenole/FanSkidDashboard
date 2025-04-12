@@ -1,6 +1,8 @@
+# requirements.txt
 streamlit
-pandas
-plotly
-scipy
 numpy
-plotly
+pandas
+matplotlib
+scikit-learn
+scipy
+joblib
