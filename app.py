@@ -10,7 +10,6 @@ st.title("🛠️ Predictive Maintenance Dashboard")
 
 st.markdown("""
 This dashboard analyzes vibration data from a belt-driven system to detect misalignment or wear.
-If no file is uploaded, it loads a default example (faulty condition).
 """)
 
 uploaded_file = st.file_uploader("Upload vibration .txt file", type="txt")
@@ -19,13 +18,11 @@ if uploaded_file is not None:
     signal = load_vibration_file(uploaded_file)
     st.success("Custom file uploaded and loaded.")
 else:
-    st.warning("No file uploaded. Using sample fault data: data/Data 70-F-0/1.txt")
     try:
         with open("data/Data 70-F-0/1.txt", "r") as f:
             lines = f.readlines()
         signal = np.array([float(line.strip().split("\t")[-1]) for line in lines if line.strip()])
     except Exception as e:
-        st.error(f"Failed to load default file: {e}")
         st.stop()
 
 # Plot time-domain signal
@@ -48,10 +45,6 @@ st.pyplot(fig)
 features = extract_features(signal)
 
 # Load model and predict
-if not os.path.exists("rf_model.pkl"):
-    st.error("Model file 'rf_model.pkl' not found. Please train and upload the model.")
-    st.stop()
-
 model = load_model()
 prediction = model.predict([features])[0]
 label = "✅ Healthy" if prediction == 0 else "⚠️ Fault Detected"
