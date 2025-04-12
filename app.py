@@ -26,24 +26,23 @@ When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz
 uploaded_file = st.file_uploader("Upload vibration .txt file", type="txt")
 
 if uploaded_file is not None:
-    signal = load_vibration_file(uploaded_file)
+    data = np.loadtxt(uploaded_file, delimiter="\t", usecols=(1, 2))
     st.success("Custom file uploaded and loaded.")
 else:
     try:
-        with open("data/Data 70-F-0/1.txt", "r") as f:
-            lines = f.readlines()
-        signal = np.array([float(line.strip().split("\t")[-1]) for line in lines if line.strip()])
+        data = np.loadtxt("data/Data 70-F-0/1.txt", delimiter="\t", usecols=(1, 2))
     except Exception as e:
         st.error("Failed to load default example file.")
         st.stop()
 
-# Plot time-domain signal
-st.subheader("Time Domain Signal")
-st.line_chart(signal)
+impeller_signal = data[:, 0] - np.mean(data[:, 0])  # Impeller side (Bearing)
+motor_signal = data[:, 1] - np.mean(data[:, 1])     # Motor side (Pulley)
 
-# Plot frequency-domain (FFT)
-st.subheader("Frequency Domain (FFT)")
+# Plot time-domain signals
+st.subheader("Time Domain Signals")
+st.line_chart({"Impeller Side (Bearing)": impeller_signal, "Motor Side (Pulley)": motor_signal})
 
+# Frequency analysis function
 def compute_fft(signal, sample_rate=10000):
     fft_result = np.fft.fft(signal)
     freq = np.fft.fftfreq(len(signal), d=1/sample_rate)
@@ -62,31 +61,30 @@ def calculate_characteristic_frequencies(speed_rpm, driver_diameter=63, belt_len
         "n": drive_speed_hz
     }
 
-# Apply FFT with DC offset removal
-signal_detrended = signal - np.mean(signal)
-freq, fft_magnitude = compute_fft(signal_detrended, sample_rate=10000)
-char_freqs = calculate_characteristic_frequencies(400)  # example RPM
+char_freqs = calculate_characteristic_frequencies(400)
 
-fig, ax = plt.subplots()
-ax.plot(freq, fft_magnitude, label='FFT Magnitude')
-ax.set_xlim(0, 30)
-ax.set_ylim(0, np.max(fft_magnitude[:len(freq)//4]) * 1.2)
-ax.set_xlabel("Frequency (Hz)")
-ax.set_ylabel("Magnitude")
-ax.set_title("FFT of Vibration Signal (DC removed)")
+# Plot FFT for both measurements
+for signal, label in zip([impeller_signal, motor_signal], ["Impeller Side (Bearing)", "Motor Side (Pulley)"]):
+    freq, fft_magnitude = compute_fft(signal)
+    fig, ax = plt.subplots()
+    ax.plot(freq, fft_magnitude, label='FFT Magnitude')
+    ax.set_xlim(0, 30)
+    ax.set_ylim(0, np.max(fft_magnitude[:len(freq)//4]) * 1.2)
+    ax.set_xlabel("Frequency (Hz)")
+    ax.set_ylabel("Magnitude")
+    ax.set_title(f"FFT of {label} Signal (DC removed)")
 
-for label, f in char_freqs.items():
-    color = "orange" if label == "n/2" else "purple"
-    linestyle = "-." if label == "n/2" else "--"
-    ax.axvline(f, color=color, linestyle=linestyle, alpha=0.6)
-    ax.text(f, np.max(fft_magnitude[:len(freq)//4]) * 0.9, f"{label}", color=color, ha="center", fontsize=8, rotation=90)
+    for f_label, f_val in char_freqs.items():
+        color = "orange" if f_label == "n/2" else "purple"
+        linestyle = "-." if f_label == "n/2" else "--"
+        ax.axvline(f_val, color=color, linestyle=linestyle, alpha=0.6)
+        ax.text(f_val, np.max(fft_magnitude[:len(freq)//4]) * 0.9, f"{f_label}", color=color, ha="center", fontsize=8, rotation=90)
 
-st.pyplot(fig)
+    st.pyplot(fig)
 
-# Feature extraction
-features = extract_features(signal)
+# Feature extraction from impeller side only
+features = extract_features(impeller_signal)
 
-# Load model and predict only if model file exists
 if os.path.exists("rf_model.pkl"):
     model = load_model()
     prediction = model.predict([features])[0]
