@@ -19,8 +19,13 @@ if uploaded_file is not None:
     st.success("Custom file uploaded and loaded.")
 else:
     st.warning("No file uploaded. Using sample fault data: data/Data 70-F-0/1.txt")
-    with open("data/Data 70-F-0/1.txt", "r") as f:
-        signal = np.array([float(line.strip()) for line in f if line.strip()])
+    try:
+        with open("data/Data 70-F-0/1.txt", "r") as f:
+            lines = f.readlines()
+        signal = np.array([float(line.strip()) for line in lines if line.strip().replace('.', '', 1).isdigit() or '-' in line])
+    except Exception as e:
+        st.error(f"Failed to load default file: {e}")
+        st.stop()
 
 # Plot time-domain signal
 st.subheader("Time Domain Signal")
