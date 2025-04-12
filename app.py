@@ -19,6 +19,8 @@ When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz
 - **Belt Frequency (fr):** Main belt frequency with harmonics at 2fr, 4fr, etc.
 - **Drive Speed (n):** Pulley or motor rotation frequency and its harmonics.
 - **Half Drive Speed (n/2):** Often reveals misalignment or load imbalance issues.
+
+🧠 **Note**: The dataset contains 10,000 samples collected over 100 seconds, giving a sampling rate of **100 Hz**, not 10,000 Hz.
 """)
 
 uploaded_file = st.file_uploader("Upload vibration .txt file", type="txt")
@@ -43,13 +45,29 @@ st.line_chart(signal)
 st.subheader("Frequency Domain (FFT)")
 signal_detrended = signal - np.mean(signal)  # remove DC component
 n = len(signal_detrended)
-freq = np.fft.rfftfreq(n, d=1/10000)  # 10kHz sampling rate
+freq = np.fft.rfftfreq(n, d=1/100)  # corrected to 100 Hz sampling rate
 fft_magnitude = np.abs(np.fft.rfft(signal_detrended))
+
+# Key frequencies (example values)
+drive_speed_hz = 6.67
+belt_freq_hz = 6.67
+harmonics = [belt_freq_hz * i for i in range(1, 7)]  # 1fr to 6fr
+half_drive = drive_speed_hz / 2
+
 fig, ax = plt.subplots()
-ax.plot(freq, fft_magnitude)
+ax.plot(freq, fft_magnitude, label='FFT Magnitude')
+ax.set_xlim(0, 30)
 ax.set_xlabel("Frequency (Hz)")
 ax.set_ylabel("Magnitude")
 ax.set_title("FFT of Vibration Signal (DC removed)")
+
+# Highlight key frequencies
+for f in harmonics:
+    ax.axvline(f, color='purple', linestyle='--', alpha=0.5)
+    ax.text(f, max(fft_magnitude)*0.9, f"{int(f)}Hz", rotation=90, color='purple', fontsize=8, ha='center')
+ax.axvline(half_drive, color='orange', linestyle='--', alpha=0.5)
+ax.text(half_drive, max(fft_magnitude)*0.85, f"n/2 ({half_drive:.2f}Hz)", rotation=90, color='orange', fontsize=8, ha='center')
+
 st.pyplot(fig)
 
 # Feature extraction
