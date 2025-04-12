@@ -43,16 +43,29 @@ st.line_chart(signal)
 
 # Plot frequency-domain (FFT)
 st.subheader("Frequency Domain (FFT)")
-signal_detrended = signal - np.mean(signal)  # remove DC component
-n = len(signal_detrended)
-freq = np.fft.rfftfreq(n, d=1/10000)  # corrected to 10,000 Hz sampling rate
-fft_magnitude = np.abs(np.fft.rfft(signal_detrended))
 
-# Key frequencies (example values)
-drive_speed_hz = 6.67
-belt_freq_hz = 6.67
-harmonics = [belt_freq_hz * i for i in range(1, 7)]  # 1fr to 6fr
-half_drive = drive_speed_hz / 2
+def compute_fft(signal, sample_rate=10000):
+    fft_result = np.fft.fft(signal)
+    freq = np.fft.fftfreq(len(signal), d=1/sample_rate)
+    return freq[:len(signal) // 2], np.abs(fft_result[:len(signal) // 2])
+
+def calculate_characteristic_frequencies(speed_rpm, driver_diameter=63, belt_length=912):
+    drive_speed_hz = speed_rpm / 60
+    fr = (drive_speed_hz * np.pi * driver_diameter) / belt_length
+    return {
+        "n/2": drive_speed_hz / 2,
+        "fr": fr,
+        "2fr": 2 * fr,
+        "4fr": 4 * fr,
+        "6fr": 6 * fr,
+        "8fr": 8 * fr,
+        "n": drive_speed_hz
+    }
+
+# Apply FFT with DC offset removal
+signal_detrended = signal - np.mean(signal)
+freq, fft_magnitude = compute_fft(signal_detrended, sample_rate=10000)
+char_freqs = calculate_characteristic_frequencies(400)  # example RPM
 
 fig, ax = plt.subplots()
 ax.plot(freq, fft_magnitude, label='FFT Magnitude')
@@ -61,12 +74,11 @@ ax.set_xlabel("Frequency (Hz)")
 ax.set_ylabel("Magnitude")
 ax.set_title("FFT of Vibration Signal (DC removed)")
 
-# Highlight key frequencies
-for f in harmonics:
-    ax.axvline(f, color='purple', linestyle='--', alpha=0.5)
-    ax.text(f, max(fft_magnitude)*0.9, f"{int(f)}Hz", rotation=90, color='purple', fontsize=8, ha='center')
-ax.axvline(half_drive, color='orange', linestyle='--', alpha=0.5)
-ax.text(half_drive, max(fft_magnitude)*0.85, f"n/2 ({half_drive:.2f}Hz)", rotation=90, color='orange', fontsize=8, ha='center')
+for label, f in char_freqs.items():
+    color = "orange" if label == "n/2" else "purple"
+    linestyle = "-." if label == "n/2" else "--"
+    ax.axvline(f, color=color, linestyle=linestyle, alpha=0.6)
+    ax.text(f, max(fft_magnitude) * 0.8, f"{label}", color=color, ha="center", fontsize=8, rotation=90)
 
 st.pyplot(fig)
 
