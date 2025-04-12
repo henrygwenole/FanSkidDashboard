@@ -3,7 +3,6 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from utils import load_vibration_file, extract_features, load_model
 
 st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
 st.title("🛠️ Predictive Maintenance Dashboard")
@@ -82,19 +81,24 @@ for signal, label in zip([impeller_signal, motor_signal], ["Impeller Side (Beari
 
     st.pyplot(fig)
 
-# Feature extraction from impeller side only
-features = extract_features(impeller_signal)
+# Illustrative classification logic (for demo purposes only)
+def illustrate_classification(signal):
+    rms = np.sqrt(np.mean(signal ** 2))
+    peak = np.max(np.abs(signal))
+    if rms > 0.05 and peak > 0.1:
+        return "⚠️ Fault Detected", "Maintenance Required! Possible misalignment or belt wear."
+    else:
+        return "✅ Healthy", "System appears to be running normally."
 
-if os.path.exists("rf_model.pkl"):
-    model = load_model()
-    prediction = model.predict([features])[0]
-    label = "✅ Healthy" if prediction == 0 else "⚠️ Fault Detected"
+# Use impeller side signal for demonstration
+classification_label, explanation = illustrate_classification(impeller_signal)
 
-    st.subheader("Prediction")
-    st.write(label)
-
-    if prediction != 0:
-        st.error("Maintenance Required! Possible misalignment or belt wear.")
+st.subheader("Illustrated Diagnostic Result")
+st.write(classification_label)
+if "Fault" in classification_label:
+    st.error(explanation)
+else:
+    st.success(explanation)
 
 st.markdown("""
 ### 👓 Launch AR Maintenance App
