@@ -23,6 +23,7 @@ else:
             lines = f.readlines()
         signal = np.array([float(line.strip().split("\t")[-1]) for line in lines if line.strip()])
     except Exception as e:
+        st.error("Failed to load default example file.")
         st.stop()
 
 # Plot time-domain signal
@@ -44,16 +45,19 @@ st.pyplot(fig)
 # Feature extraction
 features = extract_features(signal)
 
-# Load model and predict
-model = load_model()
-prediction = model.predict([features])[0]
-label = "✅ Healthy" if prediction == 0 else "⚠️ Fault Detected"
+# Load model and predict only if model file exists
+if os.path.exists("rf_model.pkl"):
+    model = load_model()
+    prediction = model.predict([features])[0]
+    label = "✅ Healthy" if prediction == 0 else "⚠️ Fault Detected"
 
-st.subheader("Prediction")
-st.write(label)
+    st.subheader("Prediction")
+    st.write(label)
 
-if prediction != 0:
-    st.error("Maintenance Required! Possible misalignment or belt wear.")
+    if prediction != 0:
+        st.error("Maintenance Required! Possible misalignment or belt wear.")
+else:
+    st.warning("Model file 'rf_model.pkl' not found. Prediction skipped.")
 
 st.markdown("""
 ### 👓 Launch AR Maintenance App
