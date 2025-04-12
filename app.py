@@ -10,6 +10,15 @@ st.title("🛠️ Predictive Maintenance Dashboard")
 
 st.markdown("""
 This dashboard analyzes vibration data from a belt-driven system to detect misalignment or wear.
+
+Analysing the vibration data in the frequency domain provides critical insights that are not as easily observed in the time domain. By converting the data to the frequency domain using Fast Fourier Transform (FFT), we can identify specific frequency components associated with various mechanical behaviours and potential faults within the system.
+
+When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz — this is a **DC offset**. Since it doesn’t provide useful mechanical information, we remove it by subtracting the **mean of the signal** before computing the FFT.
+
+#### 🔍 Key Frequency Components to Monitor:
+- **Belt Frequency (fr):** Main belt frequency with harmonics at 2fr, 4fr, etc.
+- **Drive Speed (n):** Pulley or motor rotation frequency and its harmonics.
+- **Half Drive Speed (n/2):** Often reveals misalignment or load imbalance issues.
 """)
 
 uploaded_file = st.file_uploader("Upload vibration .txt file", type="txt")
@@ -32,14 +41,15 @@ st.line_chart(signal)
 
 # Plot frequency-domain (FFT)
 st.subheader("Frequency Domain (FFT)")
-n = len(signal)
+signal_detrended = signal - np.mean(signal)  # remove DC component
+n = len(signal_detrended)
 freq = np.fft.rfftfreq(n, d=1/10000)  # 10kHz sampling rate
-fft_magnitude = np.abs(np.fft.rfft(signal))
+fft_magnitude = np.abs(np.fft.rfft(signal_detrended))
 fig, ax = plt.subplots()
 ax.plot(freq, fft_magnitude)
 ax.set_xlabel("Frequency (Hz)")
 ax.set_ylabel("Magnitude")
-ax.set_title("FFT of Vibration Signal")
+ax.set_title("FFT of Vibration Signal (DC removed)")
 st.pyplot(fig)
 
 # Feature extraction
@@ -56,8 +66,6 @@ if os.path.exists("rf_model.pkl"):
 
     if prediction != 0:
         st.error("Maintenance Required! Possible misalignment or belt wear.")
-else:
-    st.warning("Model file 'rf_model.pkl' not found. Prediction skipped.")
 
 st.markdown("""
 ### 👓 Launch AR Maintenance App
