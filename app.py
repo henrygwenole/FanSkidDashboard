@@ -23,12 +23,11 @@ When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz
 """)
 
 # Load default data directly without file uploader
-data = np.loadtxt("data/Data 70-F-0/1.txt", delimiter="	", usecols=(1, 2))
-    try:
-        data = np.loadtxt("data/Data 70-F-0/1.txt", delimiter="\t", usecols=(1, 2))
-    except Exception as e:
-        st.error("Failed to load default example file.")
-        st.stop()
+try:
+    data = np.loadtxt("data/Data 70-F-0/1.txt", delimiter="\t", usecols=(1, 2))
+except Exception as e:
+    st.error("Failed to load default example file.")
+    st.stop()
 
 impeller_signal = data[:, 0] - np.mean(data[:, 0])  # Impeller side (Bearing)
 motor_signal = data[:, 1] - np.mean(data[:, 1])     # Motor side (Pulley)
