@@ -70,6 +70,7 @@ char_freqs = calculate_characteristic_frequencies(400)  # example RPM
 fig, ax = plt.subplots()
 ax.plot(freq, fft_magnitude, label='FFT Magnitude')
 ax.set_xlim(0, 30)
+ax.set_ylim(0, np.max(fft_magnitude[:len(freq)//4]) * 1.2)
 ax.set_xlabel("Frequency (Hz)")
 ax.set_ylabel("Magnitude")
 ax.set_title("FFT of Vibration Signal (DC removed)")
@@ -78,7 +79,7 @@ for label, f in char_freqs.items():
     color = "orange" if label == "n/2" else "purple"
     linestyle = "-." if label == "n/2" else "--"
     ax.axvline(f, color=color, linestyle=linestyle, alpha=0.6)
-    ax.text(f, max(fft_magnitude) * 0.8, f"{label}", color=color, ha="center", fontsize=8, rotation=90)
+    ax.text(f, np.max(fft_magnitude[:len(freq)//4]) * 0.9, f"{label}", color=color, ha="center", fontsize=8, rotation=90)
 
 st.pyplot(fig)
 
