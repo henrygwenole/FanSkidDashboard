@@ -38,9 +38,10 @@ st.line_chart({"Impeller Side (Bearing)": impeller_signal, "Motor Side (Pulley)"
 
 # Frequency analysis function
 def compute_fft(signal, sample_rate=10000):
-    fft_result = np.fft.fft(signal)
+    windowed = signal * np.hanning(len(signal))
+    fft_result = np.fft.fft(windowed)
     freq = np.fft.fftfreq(len(signal), d=1/sample_rate)
-    return freq[:len(signal) // 2], np.abs(fft_result[:len(signal) // 2])
+    return freq[:len(signal) // 2], np.abs(fft_result[:len(signal) // 2]) / len(signal)
 
 def calculate_characteristic_frequencies(speed_rpm, driver_diameter=63, belt_length=912):
     drive_speed_hz = speed_rpm / 60
