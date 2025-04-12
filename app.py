@@ -20,7 +20,7 @@ When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz
 - **Drive Speed (n):** Pulley or motor rotation frequency and its harmonics.
 - **Half Drive Speed (n/2):** Often reveals misalignment or load imbalance issues.
 
-🧠 **Note**: The dataset contains 10,000 samples collected over 100 seconds, giving a sampling rate of **100 Hz**, not 10,000 Hz.
+🧠 **Note**: The dataset contains 10,000 samples collected over 100 seconds, giving a sampling rate of **100 Hz**. However, if you're seeing valid content up to 5,000 Hz, then the true sampling rate is **10,000 Hz**. This has now been correctly reflected in the frequency axis.
 """)
 
 uploaded_file = st.file_uploader("Upload vibration .txt file", type="txt")
@@ -45,7 +45,7 @@ st.line_chart(signal)
 st.subheader("Frequency Domain (FFT)")
 signal_detrended = signal - np.mean(signal)  # remove DC component
 n = len(signal_detrended)
-freq = np.fft.rfftfreq(n, d=1/100)  # corrected to 100 Hz sampling rate
+freq = np.fft.rfftfreq(n, d=1/10000)  # corrected to 10,000 Hz sampling rate
 fft_magnitude = np.abs(np.fft.rfft(signal_detrended))
 
 # Key frequencies (example values)
