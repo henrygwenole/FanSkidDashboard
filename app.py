@@ -22,7 +22,7 @@ else:
     try:
         with open("data/Data 70-F-0/1.txt", "r") as f:
             lines = f.readlines()
-        signal = np.array([float(line.strip()) for line in lines if line.strip().replace('.', '', 1).isdigit() or '-' in line])
+        signal = np.array([float(line.strip().split("\t")[-1]) for line in lines if line.strip()])
     except Exception as e:
         st.error(f"Failed to load default file: {e}")
         st.stop()
