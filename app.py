@@ -2,6 +2,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from utils import load_vibration_file, extract_features, load_model
 
 st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
@@ -47,6 +48,10 @@ st.pyplot(fig)
 features = extract_features(signal)
 
 # Load model and predict
+if not os.path.exists("rf_model.pkl"):
+    st.error("Model file 'rf_model.pkl' not found. Please train and upload the model.")
+    st.stop()
+
 model = load_model()
 prediction = model.predict([features])[0]
 label = "✅ Healthy" if prediction == 0 else "⚠️ Fault Detected"
