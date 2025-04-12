@@ -24,7 +24,7 @@ When FFT is applied directly to the raw signal, a large spike may appear at 0 Hz
 
 # Load default data directly without file uploader
 try:
-    data = np.loadtxt("data/Data 110-F-0/51.txt", delimiter="	", usecols=(1, 2)))
+    data = np.loadtxt("data/Data 110-F-0/51.txt", delimiter="	", usecols=(1, 2))
 except Exception as e:
     st.error("Failed to load default example file.")
     st.stop()
