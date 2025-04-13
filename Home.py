@@ -1,7 +1,6 @@
 # Home.py
 import streamlit as st
 import pandas as pd
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -40,7 +39,6 @@ for label, status in status_map.items():
 
 st.header("🧾 Estimated Operational Waste & Cost")
 
-# Updated example values (hardcoded for illustration)
 try:
     total_waste_kwh = 1450.0  # monthly energy waste
     total_cost = 1000.0       # monthly cost (£)
@@ -50,29 +48,25 @@ try:
     st.metric("Monthly Energy Waste (kWh)", f"{total_waste_kwh:,.0f} kWh")
     st.metric("Estimated Monthly Cost (£)", f"£{total_cost:,.0f}")
 
-    # Predicted future cost if maintenance is delayed
-    st.subheader("📅 Projected Cost If Maintenance Is Delayed")
-    daily_cost = total_cost / 30
-    for days in range(1, 4):
-        projected_cost = total_cost + (days * daily_cost)
-        st.markdown(f"<div style='font-size:16px;'>If delayed by {days} day(s): <strong>£{projected_cost:,.2f}</strong></div>", unsafe_allow_html=True)
+    st.subheader("📉 Energy Waste Trend (Simulated)")
 
-    # Trend plot
-    st.subheader("📊 Trend: Trans1 Belt Drive")
+    # Simulated energy loss data over a 30-day period
     days = np.arange(1, 31)
-    values = np.concatenate([
-        np.linspace(0, 5, 10),
-        np.linspace(5, 15, 10),
-        np.linspace(15, 20, 10)
-    ])
-    plt.figure(figsize=(10, 4))
-    plt.plot(days, values, color='green')
-    plt.fill_between(days, 10, 20, color='sandybrown', alpha=0.3)
-    plt.xlabel("Measurements for day")
-    plt.ylabel("Trend Value")
-    plt.title("Trend: Trans1 Belt Drive")
-    plt.grid(True)
-    st.pyplot(plt)
+    energy_loss_percent = 2 + 0.4 * days + np.random.normal(0, 1, size=len(days))  # Simulate trend
+
+    fig, ax = plt.subplots(figsize=(10, 3))
+    ax.plot(days, energy_loss_percent, color='black', linewidth=2)
+    ax.fill_between(days, 0, 5, color='green', alpha=0.2, label='Optimal')
+    ax.fill_between(days, 5, 10, color='orange', alpha=0.2, label='Moderate')
+    ax.fill_between(days, 10, max(energy_loss_percent) + 5, color='red', alpha=0.2, label='High')
+    ax.axhline(10, color='red', linestyle='--', linewidth=1)
+    ax.set_xlabel("Day")
+    ax.set_ylabel("Energy Loss (%)")
+    ax.set_title("Simulated Energy Loss Trend Over Time")
+    ax.legend(loc="upper left")
+    ax.grid(True)
+
+    st.pyplot(fig)
 
 except Exception as e:
     st.warning("⚠️ Could not calculate waste. Please check the data file.")
