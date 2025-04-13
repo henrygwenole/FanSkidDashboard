@@ -1,15 +1,16 @@
 # Home.py
 import streamlit as st
+import pandas as pd
 
-st.set_page_config(page_title="Predictive Maintenance Overview", layout="wide")
+st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
 st.title("🛠️ Predictive Maintenance Dashboard")
 
 st.markdown("""
 Welcome to the G.U.N.T. Predictive Maintenance Dashboard.
-
-This homepage summarizes the health of key machine components and links to sensor analysis views.
+This homepage provides an overview of machine health and operational impact.
 """)
 
+# --- System Health Overview Grid ---
 status_map = {
     "Motor Foundation": True,
     "Motor DE Bearing": False,
@@ -34,5 +35,24 @@ for i, (label, status) in enumerate(status_map.items()):
             unsafe_allow_html=True
         )
 
-st.write("\n")
-st.page_link("pages/Sensor_Data.py", label="🔍 View Sensor Analysis", icon="📈")
+# --- Waste & Cost Summary ---
+st.markdown("""
+### 🧾 Estimated Operational Waste & Cost
+""")
+
+try:
+    recent_df = pd.read_csv("data/most_recent_readings.csv")
+    vibration = recent_df["Vibration RMS"].mean()
+    speed = recent_df["Speed"].mean()
+    hours = recent_df["Operation Hours"].mean()
+
+    waste_kg = vibration * hours * 0.8  # illustrative formula
+    cost_gbp = waste_kg * 18.5          # £18.5 per kg
+
+    st.metric("Estimated Waste (kg)", f"{waste_kg:.2f}")
+    st.metric("Estimated Cost (GBP)", f"£{cost_gbp:.2f}")
+except Exception as e:
+    st.warning("⚠️ Could not calculate waste. Please check the data file.")
+
+# --- Link to Sensor Details ---
+st.page_link("pages/Sensor_Data.py", label="📈 Go to Sensor Analysis", icon="📊")
