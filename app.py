@@ -37,7 +37,31 @@ for i, (label, status) in enumerate(status_map.items()):
         )
 
 if clicked_component:
-    st.info(f"You selected: {clicked_component}. More diagnostic info could be shown here.")
+    st.markdown(f"## 🔍 Detailed Analysis for {clicked_component}")
+
+    # Display a section specific to the selected component
+    st.write("Sensor location:", clicked_component)
+    st.write("Status:", "⚠️ Fault Detected" if not status_map[clicked_component] else "✅ Healthy")
+
+    st.write("---")
+    st.subheader("Raw Signal and Frequency Analysis")
+    for signal, label in zip([impeller_signal, motor_signal], ["Impeller Side (Bearing)", "Motor Side (Pulley)"]):
+        freq, fft_magnitude = compute_fft(signal)
+        fig, ax = plt.subplots()
+        ax.plot(freq, fft_magnitude, label='FFT Magnitude')
+        ax.set_xlim(0, 30)
+        ax.set_ylim(0, np.max(fft_magnitude[:len(freq)//4]) * 1.2)
+        ax.set_xlabel("Frequency (Hz)")
+        ax.set_ylabel("Magnitude")
+        ax.set_title(f"FFT of {label} Signal")
+
+        for f_label, f_val in char_freqs.items():
+            color = "orange" if f_label == "n/2" else "purple"
+            linestyle = "-." if f_label == "n/2" else "--"
+            ax.axvline(f_val, color=color, linestyle=linestyle, alpha=0.6)
+            ax.text(f_val, np.max(fft_magnitude[:len(freq)//4]) * 0.9, f"{f_label}", color=color, ha="center", fontsize=8, rotation=90)
+
+        st.pyplot(fig)
 
 st.markdown("""
 This dashboard analyzes vibration data from a belt-driven system to detect misalignment or wear.
