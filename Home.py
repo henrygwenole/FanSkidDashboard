@@ -39,17 +39,23 @@ for label, status in status_map.items():
 st.header("🧾 Estimated Operational Waste & Cost")
 try:
     df = pd.read_csv("data/most_recent_readings.csv")
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
 
-    threshold = 0.15
-    high_vibration = df[df["rms"] > threshold]
+    total_waste_kwh = df["WasteKW"].sum()
+    total_cost = df["WasteCost"].sum()
+    high_waste_events = df[df["WasteKW"] > 3.5]  # adjustable threshold
 
-    waste_kwh = len(high_vibration) * 0.5
-    cost = waste_kwh * 0.15
+    st.metric("High-Waste Events", len(high_waste_events))
+    st.metric("Total Energy Waste (kWh)", f"{total_waste_kwh:.1f}")
+    st.metric("Estimated Cost (£)", f"£{total_cost:,.2f}")
 
-    st.metric("Detected High-Vibration Events", len(high_vibration))
-    st.metric("Estimated Energy Waste (kWh)", f"{waste_kwh:.1f}")
-    st.metric("Estimated Cost (£)", f"£{cost:.2f}")
+    # Predicted future cost if maintenance is delayed
+    st.subheader("📅 Projected Cost If Maintenance Is Delayed")
+    avg_cost_per_hour = total_cost / len(df)
+    for days in range(1, 4):
+        extra_hours = 24 * days
+        projected_cost = total_cost + (extra_hours * avg_cost_per_hour)
+        st.write(f"If delayed by {days} day(s): **£{projected_cost:,.2f}**")", f"£{total_cost:,.2f}")
 
 except Exception as e:
     st.warning("⚠️ Could not calculate waste. Please check the data file.")
