@@ -9,10 +9,10 @@ st.title("🛠️ Predictive Maintenance Dashboard")
 
 # --- Overview Block Grid ---
 st.subheader("System Health Overview")
+clicked_component = st.session_state.get("clicked_component", None)
 status_map = {
     "Motor Foundation": True,
-    "Motor Transmission": False,
-    "Motor DE Bearing": False,
+        "Motor DE Bearing": False,
     "Motor NDE Bearing": True,
     "Motor Misalignment": True,
     "Driven 1 Foundation": True,
@@ -25,6 +25,8 @@ status_map = {
 cols = st.columns(3)
 for i, (label, status) in enumerate(status_map.items()):
     with cols[i % 3]:
+        if st.button(f"{'✅' if status else '❌'} {label}"):
+            st.session_state.clicked_component = label
         st.markdown(
             f"""
             <div style='padding:1rem; background-color:{'#d4edda' if status else '#f8d7da'}; border:1px solid {'#155724' if status else '#721c24'}; border-radius:10px'>
@@ -33,6 +35,9 @@ for i, (label, status) in enumerate(status_map.items()):
             """,
             unsafe_allow_html=True
         )
+
+if clicked_component:
+    st.info(f"You selected: {clicked_component}. More diagnostic info could be shown here.")
 
 st.markdown("""
 This dashboard analyzes vibration data from a belt-driven system to detect misalignment or wear.
