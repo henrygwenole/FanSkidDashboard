@@ -35,4 +35,4 @@ for i, (label, status) in enumerate(status_map.items()):
         )
 
 st.write("\n")
-st.page_link("Sensor_Data.py", label="🔍 View Sensor Analysis", icon="📈")
+st.page_link("pages/Sensor_Data.py", label="🔍 View Sensor Analysis", icon="📈")
