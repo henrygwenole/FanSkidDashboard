@@ -26,20 +26,16 @@ def compute_fft(signal, sample_rate=10000):
     freq = np.fft.fftfreq(len(signal), d=1/sample_rate)
     return freq[:len(signal) // 2], np.abs(fft_result[:len(signal) // 2]) / len(signal)
 
-def calculate_characteristic_frequencies(speed_rpm, driver_diameter=63, belt_length=912):
-    drive_speed_hz = speed_rpm / 60
-    fr = (drive_speed_hz * np.pi * driver_diameter) / belt_length
-    return {
-        "fr": fr,
-        "2fr": 2 * fr,
-        "4fr": 4 * fr,
-        "6fr": 6 * fr,
-        "8fr": 8 * fr,
-        "n": drive_speed_hz,
-        "n/2": drive_speed_hz / 2
-    }
-
-char_freqs = calculate_characteristic_frequencies(2000)
+# Updated frequency markers from reference article
+# Based on visually matching to sample spectrum, override to fixed frequency values
+char_freqs = {
+    "n/2": 20,
+    "2fr": 30,
+    "4fr": 40,
+    "n": 45,
+    "6fr": 60,
+    "8fr": 80
+}
 
 # Time Domain
 st.subheader("Time Domain Signals")
@@ -53,7 +49,7 @@ for faulty, good, label in zip([impeller_faulty, motor_faulty], [impeller_good, 
     fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(freq_f, fft_f, label="Faulty", color="red", alpha=0.7)
     ax.plot(freq_g, fft_g, label="Good", color="blue", alpha=0.6)
-    ax.set_xlim(0, 2000)
+    ax.set_xlim(0, 220)
     ax.set_xlabel("Frequency (Hz)")
     ax.set_ylabel("Magnitude")
     ax.set_title(f"FFT Comparison for {label}")
