@@ -63,5 +63,11 @@ try:
     ax2.grid(True)
     st.pyplot(fig2)
 
+    # AR Maintenance Link
+    st.markdown("""
+    ### 👓 Launch AR Maintenance App
+    [Open on HoloLens](https://fanskiddashboard-gubxuivehlan4hbdadp6ph.streamlit.app)
+    """, unsafe_allow_html=True)
+
 except Exception as e:
     st.error("⚠️ Failed to load or process signal data. Please check file paths or format.")
