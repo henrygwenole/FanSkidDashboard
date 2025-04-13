@@ -1,16 +1,22 @@
 # Home.py
 import streamlit as st
 import pandas as pd
+import os
 
 st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
 st.title("🛠️ Predictive Maintenance Dashboard")
 
 st.markdown("""
-Welcome to the G.U.N.T. Predictive Maintenance Dashboard.
-This homepage provides an overview of machine health and operational impact.
+Welcome to the Predictive Maintenance Dashboard. This interface provides insights into vibration patterns,
+frequency characteristics, and potential maintenance needs based on recent sensor data.
+
+Use the navigation menu to explore:
+- 📈 **Sensor Signal Analysis**: Time-domain and frequency-domain inspection
+- 🧠 **Fault Classification**: Pattern-based condition assessment
+- 🔍 **Waste & Cost Insights**: Estimated inefficiencies based on vibration data
 """)
 
-# --- System Health Overview Grid ---
+# Status indicators
 status_map = {
     "Motor Foundation": True,
     "Motor DE Bearing": False,
@@ -23,36 +29,34 @@ status_map = {
     "Driven 1 Misalignment": True,
 }
 
-cols = st.columns(3)
-for i, (label, status) in enumerate(status_map.items()):
-    with cols[i % 3]:
-        st.markdown(
-            f"""
-            <div style='padding:1rem; background-color:{'#d4edda' if status else '#f8d7da'}; border:1px solid {'#155724' if status else '#721c24'}; border-radius:10px'>
-                <h4 style='color:{'#155724' if status else '#721c24'}'>{'✅' if status else '❌'} {label}</h4>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+st.header("🩺 System Health Overview")
+for label, status in status_map.items():
+    color = "green" if status else "red"
+    symbol = "✅" if status else "❌"
+    st.markdown(f"<div style='background-color:{color}; padding:10px; border-radius:10px; color:white; margin-bottom:5px;'>"
+                f"<strong>{symbol} {label}</strong></div>", unsafe_allow_html=True)
 
-# --- Waste & Cost Summary ---
-st.markdown("""
-### 🧾 Estimated Operational Waste & Cost
-""")
-
+st.header("🧾 Estimated Operational Waste & Cost")
 try:
-    recent_df = pd.read_csv("data/most_recent_readings.csv")
-    vibration = recent_df["Vibration RMS"].mean()
-    speed = recent_df["Speed"].mean()
-    hours = recent_df["Operation Hours"].mean()
+    df = pd.read_csv("data/most_recent_readings.csv")
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-    waste_kg = vibration * hours * 0.8  # illustrative formula
-    cost_gbp = waste_kg * 18.5          # £18.5 per kg
+    threshold = 0.15
+    high_vibration = df[df["rms"] > threshold]
 
-    st.metric("Estimated Waste (kg)", f"{waste_kg:.2f}")
-    st.metric("Estimated Cost (GBP)", f"£{cost_gbp:.2f}")
+    waste_kwh = len(high_vibration) * 0.5
+    cost = waste_kwh * 0.15
+
+    st.metric("Detected High-Vibration Events", len(high_vibration))
+    st.metric("Estimated Energy Waste (kWh)", f"{waste_kwh:.1f}")
+    st.metric("Estimated Cost (£)", f"£{cost:.2f}")
+
 except Exception as e:
     st.warning("⚠️ Could not calculate waste. Please check the data file.")
 
-# --- Link to Sensor Details ---
-st.page_link("pages/Sensor_Data.py", label="📈 Go to Sensor Analysis", icon="📊")
+st.markdown("""
+---
+
+### 👓 Launch AR Maintenance App
+[Open on HoloLens](frn://s/6u615mm)
+""", unsafe_allow_html=True)
