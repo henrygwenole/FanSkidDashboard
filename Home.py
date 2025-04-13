@@ -2,6 +2,8 @@
 import streamlit as st
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 st.set_page_config(page_title="Predictive Maintenance Dashboard", layout="wide")
 st.title("🛠️ Predictive Maintenance Dashboard")
@@ -38,23 +40,39 @@ for label, status in status_map.items():
 
 st.header("🧾 Estimated Operational Waste & Cost")
 
-# Hardcoded example values
+# Updated example values (hardcoded for illustration)
 try:
-    total_waste_kwh = 120.5
-    total_cost = 1827.60
-    high_waste_events = 17
+    total_waste_kwh = 1450.0  # monthly energy waste
+    total_cost = 1000.0       # monthly cost (£)
+    high_waste_events = 25
 
     st.metric("High-Waste Events", high_waste_events)
-    st.metric("Total Energy Waste (kWh)", f"{total_waste_kwh:.1f}")
-    st.metric("Estimated Cost (£)", f"£{total_cost:,.2f}")
+    st.metric("Monthly Energy Waste (kWh)", f"{total_waste_kwh:,.0f} kWh")
+    st.metric("Estimated Monthly Cost (£)", f"£{total_cost:,.0f}")
 
     # Predicted future cost if maintenance is delayed
     st.subheader("📅 Projected Cost If Maintenance Is Delayed")
-    avg_cost_per_hour = total_cost / 24
+    daily_cost = total_cost / 30
     for days in range(1, 4):
-        extra_hours = 24 * days
-        projected_cost = total_cost + (extra_hours * avg_cost_per_hour)
-        st.write(f"If delayed by {days} day(s): **£{projected_cost:,.2f}**")
+        projected_cost = total_cost + (days * daily_cost)
+        st.markdown(f"<div style='font-size:16px;'>If delayed by {days} day(s): <strong>£{projected_cost:,.2f}</strong></div>", unsafe_allow_html=True)
+
+    # Trend plot
+    st.subheader("📊 Trend: Trans1 Belt Drive")
+    days = np.arange(1, 31)
+    values = np.concatenate([
+        np.linspace(0, 5, 10),
+        np.linspace(5, 15, 10),
+        np.linspace(15, 20, 10)
+    ])
+    plt.figure(figsize=(10, 4))
+    plt.plot(days, values, color='green')
+    plt.fill_between(days, 10, 20, color='sandybrown', alpha=0.3)
+    plt.xlabel("Measurements for day")
+    plt.ylabel("Trend Value")
+    plt.title("Trend: Trans1 Belt Drive")
+    plt.grid(True)
+    st.pyplot(plt)
 
 except Exception as e:
     st.warning("⚠️ Could not calculate waste. Please check the data file.")
