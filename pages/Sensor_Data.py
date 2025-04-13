@@ -27,7 +27,6 @@ def compute_fft(signal, sample_rate=10000):
     return freq[:len(signal) // 2], np.abs(fft_result[:len(signal) // 2]) / len(signal)
 
 # Updated frequency markers from reference article
-# Based on visually matching to sample spectrum, override to fixed frequency values
 char_freqs = {
     "n/2": 20,
     "2fr": 30,
@@ -39,11 +38,16 @@ char_freqs = {
 
 # Time Domain
 st.subheader("Time Domain Signals")
-st.line_chart({"Faulty - Bearing": impeller_faulty, "Good - Bearing": impeller_good, "Faulty - Pulley": motor_faulty, "Good - Pulley": motor_good})
+st.line_chart({
+    "Faulty - Bearing Sensor": impeller_faulty,
+    "Good - Bearing Sensor": impeller_good,
+    "Faulty - Pulley Sensor": motor_faulty,
+    "Good - Pulley Sensor": motor_good
+})
 
 # Frequency Domain
 st.subheader("Frequency Domain Comparison (FFT)")
-for faulty, good, label in zip([impeller_faulty, motor_faulty], [impeller_good, motor_good], ["Impeller Side (Bearing)", "Motor Side (Pulley)"]):
+for faulty, good, label in zip([motor_faulty, impeller_faulty], [motor_good, impeller_good], ["Pulley Sensor", "Bearing Sensor"]):
     freq_f, fft_f = compute_fft(faulty)
     freq_g, fft_g = compute_fft(good)
     fig, ax = plt.subplots(figsize=(10, 4))
@@ -69,8 +73,15 @@ st.subheader("Illustrated Diagnostic Result")
 def illustrate_classification(signal):
     rms = np.sqrt(np.mean(signal ** 2))
     peak = np.max(np.abs(signal))
+    crest_factor = peak / rms if rms > 0 else 0
+    
     if rms > 0.05 and peak > 0.1:
-        return "⚠️ Fault Detected", "Maintenance Required! Possible misalignment or belt wear."
+        if crest_factor > 5:
+            return "⚠️ Fault Detected", "High crest factor may indicate loose components or shock loads."
+        elif crest_factor > 3:
+            return "⚠️ Fault Detected", "Moderate crest factor. Possible misalignment or belt wear."
+        else:
+            return "⚠️ Fault Detected", "Abnormal vibration detected. Inspect motor and belt system."
     else:
         return "✅ Healthy", "System appears to be running normally."
 
